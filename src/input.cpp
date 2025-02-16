@@ -3,6 +3,8 @@
 #include "time.h"
 #include "OreonMath.hpp"
 
+using namespace VectorMath;
+
 Input input;
 
 void Input::init() {
@@ -24,7 +26,7 @@ void Input::update() {
   {
     static uint32_t t = millis();
     if (millis() - t > 300) {
-      const float BAT_LOW = 3.2, BAT_HIGH = 4.15;
+      const float BAT_LOW = 3.5, BAT_HIGH = 4.05;
       voltage = power::voltage() + 0.3;  // Add compensation for diode voltage drop
       percentage = Math::clamp((voltage - BAT_LOW) / (BAT_HIGH - BAT_LOW), 0.0, 1.0);
       charging = power::charging();

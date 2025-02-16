@@ -17,4 +17,5 @@ void initRTC() {
 
 void updateRTC() {
   now = rtc.now();
+  Serial.println(now.second());
 }

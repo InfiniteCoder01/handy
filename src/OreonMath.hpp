@@ -206,8 +206,8 @@ template <typename T> inline vec2<T> max(const vec2<T>& a, const vec2<T>& b) { r
 template <typename T> inline vec3<T> min(const vec3<T>& a, const vec3<T>& b) { return vec3<T>(Math::min(a.x, b.x), Math::min(a.y, b.y), Math::min(a.z, b.z)); }
 template <typename T> inline vec3<T> max(const vec3<T>& a, const vec3<T>& b) { return vec3<T>(Math::max(a.x, b.x), Math::max(a.y, b.y), Math::max(a.z, b.z)); }
 
-template <typename T> inline vec2<T> lerp(const vec2<T>& a, const vec2<T>& b, float t) { return vec2<T>(Math::lerp(a.x, b.x, t), Math::lerp(a.y, b.y, t)); }
-template <typename T> inline vec3<T> lerp(const vec3<T>& a, const vec3<T>& b, float t) { return vec3<T>(Math::lerp(a.x, b.x, t), Math::lerp(a.y, b.y, t), Math::lerp(a.z, b.z, t)); }
+template <typename T> inline vec2<T> lerp(const vec2<T>& a, const vec2<T>& b, float t) { return vec2<T>(lerp(a.x, b.x, t), lerp(a.y, b.y, t)); }
+template <typename T> inline vec3<T> lerp(const vec3<T>& a, const vec3<T>& b, float t) { return vec3<T>(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)); }
 
 // clang-format off
 template<typename T> T inline sqrDistance(const vec2<T>& a, const vec2<T>& b) { vec2<T> v = b - a; return v.sqrMagnitude(); }
@@ -220,11 +220,11 @@ template<typename T> T inline distance(const vec3<T>& a, const vec3<T>& b) { vec
 template <typename T> inline T dot(const vec3<T>& a, const vec3<T>& b) { return a.dot(b); }
 template <typename T> inline vec3<T> cross(const vec3<T>& a, const vec3<T>& b) { return a.cross(b); }
 
-template <typename T> inline vec2<T> abs(vec2<T> v) { return vec2<T>(Math::abs(v.x), Math::abs(v.y)); }
-template <typename T> inline vec3<T> abs(vec3<T> v) { return vec3<T>(Math::abs(v.x), Math::abs(v.y), Math::abs(v.z)); }
+template <typename T> inline vec2<T> abs(vec2<T> v) { return vec2<T>(abs(v.x), abs(v.y)); }
+template <typename T> inline vec3<T> abs(vec3<T> v) { return vec3<T>(abs(v.x), abs(v.y), abs(v.z)); }
 
-template <typename T> inline vec2<int> sign(vec2<T> v) { return vec2<int>(Math::sign(v.x), Math::sign(v.y)); }
-template <typename T> inline vec3<int> sign(vec3<T> v) { return vec3<int>(Math::sign(v.x), Math::sign(v.y), Math::sign(v.z));  }
+template <typename T> inline vec2<int> sign(vec2<T> v) { return vec2<int>(sign(v.x), sign(v.y)); }
+template <typename T> inline vec3<int> sign(vec3<T> v) { return vec3<int>(sign(v.x), sign(v.y), sign(v.z));  }
 
 inline vec2<int> floor(vec2<float> v) { return vec2<int>(Math::floor(v.x), Math::floor(v.y)); }
 inline vec3<int> floor(vec3<float> v) { return vec3<int>(Math::floor(v.x), Math::floor(v.y), Math::floor(v.z)); }
@@ -346,17 +346,17 @@ template <typename T> const Rect<T> Rect<T>::zero = Rect<T>(0, 0, 0, 0);
 } // namespace VectorMath
 
 #ifdef OREON_MATH_MIN_DEF
-#define min Math::min
+#define min min
 #endif
 
 #ifdef OREON_MATH_MAX_DEF
-#define max Math::max
+#define max max
 #endif
 
 #ifdef OREON_MATH_ABS_DEF
-#define abs Math::abs
+#define abs abs
 #endif
 
 #ifdef OREON_MATH_ROUND_DEF
-#define round Math::round
+#define round round
 #endif

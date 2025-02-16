@@ -1,8 +1,10 @@
+#include <Arduino.h>
 #include "ui.h"
 #include "input.h"
 #include "power.h"
 #include "time.h"
 #include "utils.h"
+#include "icons.h"
 #include <memory>
 
 void setup() {
@@ -17,11 +19,15 @@ void loop() {
   ui::screen.fillScreen(BLACK);
 
   ui::Container layout;
-  layout.vertical = true;
+  // layout.vertical = true;
+  layout.size.y = 128;
+  layout.alignItems = 0.5;
+  layout.justifyContent = ui::Container::Alignment::Fill;
+  layout.children.push_back(std::make_unique<ui::Image>(ui::ICON_SIZE, ui::icon(ui::Icon::Settings)));
   layout.children.push_back(std::make_unique<ui::Label>(format("%02d:%02d:%02d", now.hour(), now.minute(), now.second())));
   layout.children.push_back(std::make_unique<ui::Label>(format("%f% (%fV)", input.percentage, input.voltage)));
-  layout.layout(ui::Frame::fullscreen());
-  layout.draw(false);
+  layout.layout(ui::screenSize());
+  layout.draw(0);
 
   ui::show();
   if (millis() - input.lastActive > 10000) {
