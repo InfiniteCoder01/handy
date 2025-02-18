@@ -1,5 +1,5 @@
-#include "display.h"
 #include "ui.h"
+#include "display.h"
 
 namespace ui {
 void showSplash(const String &text, const uint16_t color) {
@@ -14,6 +14,10 @@ void showSplash(const String &text, const uint16_t color) {
   show();
 }
 
+void serve(Container &container) {
+  //
+}
+
 // ************************************************************** Container
 void Container::layout(vec2u available) {
   computedSize = 0;
@@ -25,43 +29,58 @@ void Container::layout(vec2u available) {
   for (size_t i = 0; i < children.size(); i++) {
     children[i]->pos = v;
     children[i]->layout(available - v);
-    if (wrap && (v + children[i]->computedSize).dot(mainDir) > available.dot(mainDir)) {
+    if (wrap &&
+        (v + children[i]->computedSize).dot(mainDir) > available.dot(mainDir)) {
       // New row
       splits.push_back(i);
       v *= offDir;
-      v += offDir * rowWidth;
+      v += offDir * (rowWidth + spacing);
       rowWidth = 0;
       children[i]->pos = v;
       children[i]->layout(available - v);
     }
-    computedSize = VectorMath::max(computedSize, (vec2u)(v + children[i]->computedSize));
+    computedSize =
+        VectorMath::max(computedSize, (vec2u)(v + children[i]->computedSize));
 
-    rowWidth = Math::max(rowWidth, (uint16_t)children[i]->computedSize.dot(offDir));
-    v += mainDir * children[i]->computedSize;
+    rowWidth =
+        Math::max(rowWidth, (uint16_t)children[i]->computedSize.dot(offDir));
+    v += mainDir * children[i]->computedSize + mainDir * spacing;
   }
   splits.push_back(children.size());
 
   vec2u packedSize = computedSize;
-  if (size.x > 0) computedSize.x = size.x;
-  if (size.y > 0) computedSize.y = size.y;
+  if (size.x > 0)
+    computedSize.x = size.x;
+  if (size.y > 0)
+    computedSize.y = size.y;
 
   float justifyContentAlignment = 0.0;
-  if (justifyContent == Alignment::Center) justifyContentAlignment = 0.5;
-  else if (justifyContent == Alignment::End) justifyContentAlignment = 1.0;
+  if (justifyContent == Alignment::Center)
+    justifyContentAlignment = 0.5;
+  else if (justifyContent == Alignment::End)
+    justifyContentAlignment = 1.0;
 
   size_t rowStart = 0;
   for (const size_t rowEnd : splits) {
     rowWidth = 0;
     uint16_t rowLength = 0;
     for (size_t i = rowStart; i < rowEnd; i++) {
-      rowWidth = Math::max(rowWidth, (uint16_t)children[i]->computedSize.dot(offDir));
+      rowWidth =
+          Math::max(rowWidth, (uint16_t)children[i]->computedSize.dot(offDir));
       rowLength = (children[i]->pos + children[i]->computedSize).dot(mainDir);
     }
 
-    float offset = (computedSize.dot(mainDir) - rowLength) * justifyContentAlignment;
-    float spacing = justifyContent == Alignment::Fill ? (computedSize.dot(mainDir) - rowLength) / (float)Math::max(rowEnd - rowStart - 1, 1) : 0.0;
+    float offset =
+        (computedSize.dot(mainDir) - rowLength) * justifyContentAlignment;
+    float spacing = justifyContent == Alignment::Fill
+                        ? (computedSize.dot(mainDir) - rowLength) /
+                              (float)Math::max(rowEnd - rowStart - 1, 1)
+                        : 0.0;
     for (size_t i = rowStart; i < rowEnd; i++) {
-      children[i]->pos += (offDir * rowWidth - children[i]->computedSize * offDir) * alignItems + mainDir * offset;
+      children[i]->pos +=
+          (offDir * rowWidth - children[i]->computedSize * offDir) *
+              alignItems +
+          mainDir * offset;
       offset += spacing;
     }
     rowStart = rowEnd;
@@ -76,18 +95,20 @@ void Container::draw(vec2i offset) {
 
 // ************************************************************** Label
 void Label::setScreenSettings(vec2i offset) const {
-  screen.setCursor(offset.x, offset.y);
+  screen.setFont(font);
+  screen.setCursor(offset.x, offset.y + (font ? 10 * size : 0));
   screen.setTextSize(size);
   screen.setTextColor(color);
   screen.setTextWrap(false);
 }
 
 void Label::layout(vec2u available) {
-  setScreenSettings(ui::screenSize() - available);
+  setScreenSettings(0);
   int16_t x1, y1;
   uint16_t w, h;
-  screen.getTextBounds(text, screen.getCursorX(), screen.getCursorY(), &x1, &y1, &w, &h);
-  computedSize = vec2u(x1 + w - screen.getCursorX(), y1 + h - screen.getCursorY());
+  screen.getTextBounds(text, screen.getCursorX(), screen.getCursorY(), &x1, &y1,
+                       &w, &h);
+  computedSize = vec2u(w, h);
 }
 
 void Label::draw(vec2i offset) {
@@ -95,8 +116,12 @@ void Label::draw(vec2i offset) {
   screen.print(text);
 }
 
+// *********************************************************** FunctionalLabel
+void FunctionalLabel::layout(vec2u available) {
+  text = source();
+  Label::layout(available);
+}
+
 // ************************************************************** Image
-void Image::draw(vec2i offset) {
-  drawImage(offset, computedSize, image);
-}
-}
+void Image::draw(vec2i offset) { drawImage(offset, computedSize, image); }
+} // namespace ui

@@ -1,35 +1,58 @@
-#include <Arduino.h>
-#include "ui.h"
+#include "apps/menu.h"
 #include "input.h"
 #include "power.h"
-#include "time.h"
-#include "utils.h"
-#include "icons.h"
-#include <memory>
+#include "ui/status.h"
+#include "ui/ui.h"
+#include <Arduino.h>
+#include <Fonts/FreeMonoBoldOblique9pt7b.h>
+
+static ui::Container mainScreen;
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("Handy - Best watch in the world!");
+
+  power::init();
   ui::initializeDisplay();
   input.init();
-  power::init();
+
+  status::createUI();
+  mainScreen.size = ui::screenSize();
+  mainScreen.justifyContent = ui::Container::Alignment::Center;
+
+  auto center = std::make_shared<ui::Container>(
+      true, ui::Container::Alignment::Center, 1.0);
+  center->size.y = ui::screen.height(); // - status::bar.size.y;
+  {
+    auto time = std::make_shared<ui::Container>();
+    time->alignItems = 1.0;
+    *time << new ui::FunctionalLabel(formatTime1, 2, WHITE,
+                                     &FreeMonoBoldOblique9pt7b);
+    *time << new ui::FunctionalLabel(formatTime2, 1, WHITE,
+                                     &FreeMonoBoldOblique9pt7b);
+
+    *center << std::move(time);
+  }
+  *center << new ui::FunctionalLabel(formatDate);
+
+  mainScreen << status::bar;
+  mainScreen << std::move(center);
+
+  menu::createUI();
 }
 
 void loop() {
   input.update();
   ui::screen.fillScreen(BLACK);
 
-  ui::Container layout;
-  // layout.vertical = true;
-  layout.size.y = 128;
-  layout.alignItems = 0.5;
-  layout.justifyContent = ui::Container::Alignment::Fill;
-  layout.children.push_back(std::make_unique<ui::Image>(ui::ICON_SIZE, ui::icon(ui::Icon::Settings)));
-  layout.children.push_back(std::make_unique<ui::Label>(format("%02d:%02d:%02d", now.hour(), now.minute(), now.second())));
-  layout.children.push_back(std::make_unique<ui::Label>(format("%f% (%fV)", input.percentage, input.voltage)));
-  layout.layout(ui::screenSize());
-  layout.draw(0);
-
+  mainScreen.layout(ui::screenSize());
+  mainScreen.draw(0);
   ui::show();
+
+  if (input.ok.click()) {
+    menu::show();
+  }
+
   if (millis() - input.lastActive > 10000) {
     power::sleep();
   }

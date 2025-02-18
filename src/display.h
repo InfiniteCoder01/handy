@@ -1,7 +1,7 @@
 #pragma once
+#include "OreonMath.hpp"
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
-#include "OreonMath.hpp"
 
 using namespace VectorMath;
 
@@ -24,4 +24,4 @@ void displayPower(bool enabled);
 void show();
 
 void drawImage(vec2i pos, vec2u size, const uint16_t *image);
-}
+} // namespace ui
