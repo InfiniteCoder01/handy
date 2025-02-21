@@ -14,7 +14,7 @@ static const uint16_t batteryIcons[] = {
     0xffff, 0x0000, 0x0000, 0xffff, 0xffff, 0xffff, 0x0000, 0xffff,
     0xffff, 0x0000, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff};
 
-void Battery::draw(vec2i offset) {
+bool Battery::draw(vec2i offset, bool focused) {
   if (input.charging) {
     ui::drawImage(offset, computedSize,
                   batteryIcons + computedSize.x * computedSize.y);
@@ -35,6 +35,7 @@ void Battery::draw(vec2i offset) {
     ui::screen.fillRect(offset.x + 1, offset.y + computedSize.y - height - 1,
                         computedSize.x - 2, height, color);
   }
+  return false;
 }
 
 void createUI() {

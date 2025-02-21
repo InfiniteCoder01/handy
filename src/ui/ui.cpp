@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "display.h"
+#include "input.h"
 
 namespace ui {
 void showSplash(const String &text, const uint16_t color) {
@@ -14,11 +15,15 @@ void showSplash(const String &text, const uint16_t color) {
   show();
 }
 
-void serve(Container &container) {
-  //
+// ************************************************************** Container
+bool Container::focusable() {
+  for (auto &child : children) {
+    if (child->focusable())
+      return true;
+  }
+  return false;
 }
 
-// ************************************************************** Container
 void Container::layout(vec2u available) {
   computedSize = 0;
   vec2i v = 0;
@@ -87,10 +92,58 @@ void Container::layout(vec2u available) {
   }
 }
 
-void Container::draw(vec2i offset) {
-  for (auto &child : children) {
-    child->draw(offset + child->pos);
+bool Container::draw(vec2i offset, bool focused) {
+  if (focused) {
+    while (cursor < children.size() && !children[cursor]->focusable())
+      cursor++;
+    if (cursor >= children.size())
+      cursor = 0;
   }
+
+  bool selectedHeld = false;
+  for (size_t i = 0; i < children.size(); i++) {
+    bool selected = focused && cursor == i;
+    bool hold = children[i]->draw(offset + children[i]->pos, selected);
+    if (selected)
+      selectedHeld = hold;
+  }
+
+  if (selectedHeld)
+    return true;
+
+  if (input.active) {
+    bool hold = false;
+    while (input.joy.x > 0 ? cursor + 1 < children.size() : cursor > 0) {
+      cursor += input.joy.x;
+      if (children[cursor]->focusable()) {
+        hold = true;
+        break;
+      }
+    }
+    if (!hold)
+      cursor = 0;
+
+    return hold;
+  }
+
+  return false;
+}
+
+// ************************************************************** Button
+void Button::layout(vec2u available) {
+  kid->pos = pos + padding;
+  kid->layout(available - padding * 2);
+  computedSize = kid->computedSize + padding * 2;
+}
+
+bool Button::draw(vec2i offset, bool focused) {
+  bool hold = kid->draw(offset + padding, focused);
+  if (focused) {
+    screen.drawRect(offset.x, offset.y, computedSize.x, computedSize.y, RED);
+    if (input.ok.click())
+      onClick();
+  }
+  return hold;
 }
 
 // ************************************************************** Label
@@ -108,12 +161,13 @@ void Label::layout(vec2u available) {
   uint16_t w, h;
   screen.getTextBounds(text, screen.getCursorX(), screen.getCursorY(), &x1, &y1,
                        &w, &h);
-  computedSize = vec2u(w, h);
+  computedSize = vec2u(w, h) + focusable() * 2;
 }
 
-void Label::draw(vec2i offset) {
-  setScreenSettings(offset);
+bool Label::draw(vec2i offset, bool focused) {
+  setScreenSettings(offset + focusable());
   screen.print(text);
+  return false;
 }
 
 // *********************************************************** FunctionalLabel
@@ -123,5 +177,8 @@ void FunctionalLabel::layout(vec2u available) {
 }
 
 // ************************************************************** Image
-void Image::draw(vec2i offset) { drawImage(offset, computedSize, image); }
+bool Image::draw(vec2i offset, bool focused) {
+  drawImage(offset, computedSize, image);
+  return false;
+}
 } // namespace ui

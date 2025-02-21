@@ -1,21 +1,21 @@
 #pragma once
 #include "display.h"
-#include "functional"
-#include "memory"
-#include "optional"
-#include "vector"
+#include "icons.h"
+#include <functional>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace ui {
 struct Container;
 
 inline vec2u screenSize() { return vec2u(screen.width(), screen.height()); }
 void showSplash(const String &text, const uint16_t color = WHITE);
-void serve(Container &container);
 
 // ************************************************************** Nodes
 struct Node {
-  vec2i pos;
-  vec2u computedSize;
+  vec2i pos = 0;
+  vec2u computedSize = 0;
 
   virtual ~Node() = default;
 
@@ -25,8 +25,9 @@ struct Node {
   // limited to available space
   virtual void layout(vec2u available) { computedSize = available; }
 
-  // Draw relative to the offset (top-left of this item on the screen)
-  virtual void draw(vec2i offset) {}
+  // Draw relative to the offset (top-left of this item on the screen), returns
+  // true if holds focus
+  virtual bool draw(vec2i offset, bool focused) { return false; }
 };
 
 struct Container : Node {
@@ -38,13 +39,12 @@ struct Container : Node {
   // Spacing
   uint16_t spacing = 1;
 
+  uint16_t cursor = 0;
+
   enum Alignment { Start, Center, End, Fill } justifyContent = Alignment::Start;
   float alignItems = 0.0;
 
-  Container(bool vertical = false, Alignment justifyContent = Alignment::Start,
-            float alignItems = 0.0)
-      : vertical(vertical), justifyContent(justifyContent),
-        alignItems(alignItems) {}
+  Container(bool vertical = false) : Node(), vertical(vertical) {}
 
   virtual ~Container() = default;
 
@@ -58,8 +58,25 @@ struct Container : Node {
     return *this;
   }
 
+  virtual bool focusable() override;
   virtual void layout(vec2u available) override;
-  virtual void draw(vec2i offset) override;
+  virtual bool draw(vec2i offset, bool focused) override;
+};
+
+struct Button : Node {
+  std::shared_ptr<Node> kid;
+  std::function<void()> onClick;
+  uint8_t padding = 1;
+
+  Button(std::shared_ptr<Node> kid, std::function<void()> onClick)
+      : Node(), kid(kid), onClick(onClick) {}
+
+  Button(Node *kid, std::function<void()> onClick)
+      : Button(std::shared_ptr<Node>(kid), onClick) {}
+
+  virtual bool focusable() override { return true; }
+  virtual void layout(vec2u available) override;
+  virtual bool draw(vec2i offset, bool focused) override;
 };
 
 struct Label : Node {
@@ -70,13 +87,13 @@ struct Label : Node {
 
   Label(String text, uint8_t size = 1, uint16_t color = WHITE,
         const GFXfont *font = nullptr)
-      : text(text), size(size), color(color), font(font) {}
+      : Node(), text(text), size(size), color(color), font(font) {}
 
   virtual ~Label() = default;
 
   void setScreenSettings(vec2i offset) const;
   virtual void layout(vec2u available) override;
-  virtual void draw(vec2i offset) override;
+  virtual bool draw(vec2i offset, bool focused) override;
 };
 
 struct FunctionalLabel : Label {
@@ -84,7 +101,7 @@ struct FunctionalLabel : Label {
 
   FunctionalLabel(std::function<String()> source, uint8_t size = 1,
                   uint16_t color = WHITE, const GFXfont *font = nullptr)
-      : source(source), Label(source(), size, color, font) {}
+      : Label(source(), size, color, font), source(source) {}
 
   virtual ~FunctionalLabel() = default;
   virtual void layout(vec2u available) override;
@@ -92,16 +109,95 @@ struct FunctionalLabel : Label {
 
 struct Image : Node {
   const uint16_t *image;
-  std::optional<std::function<void()>> onClick;
 
-  Image(vec2u size, const uint16_t *image,
-        std::optional<std::function<void()>> onClick = std::nullopt)
-      : image(image), onClick(onClick) {
+  Image(vec2u size, const uint16_t *image) : Node(), image(image) {
     computedSize = size;
   }
 
-  virtual bool focusable() override { return onClick.has_value(); }
   virtual void layout(vec2u available) override {}
-  virtual void draw(vec2i offset) override;
+  virtual bool draw(vec2i offset, bool focused) override;
 };
+
+namespace shortcuts {
+inline std::shared_ptr<Node>
+list(std::initializer_list<std::shared_ptr<Node>> nodes) {
+  std::shared_ptr<Container> container = std::make_shared<Container>();
+  container->children = nodes;
+  return container;
+}
+
+inline std::shared_ptr<Node>
+vlist(std::initializer_list<std::shared_ptr<Node>> nodes) {
+  std::shared_ptr<Container> container = std::make_shared<Container>(true);
+  container->children = nodes;
+  return container;
+}
+
+inline std::shared_ptr<Node>
+center(std::initializer_list<std::shared_ptr<Node>> nodes, vec2u size = 0) {
+  std::shared_ptr<Container> container = std::make_shared<Container>();
+  container->justifyContent = Container::Alignment::Center;
+  container->alignItems = 0.5;
+  container->size = size;
+  container->children = nodes;
+  return container;
+}
+
+inline std::shared_ptr<Node>
+vcenter(std::initializer_list<std::shared_ptr<Node>> nodes, vec2u size = 0) {
+  std::shared_ptr<Container> container = std::make_shared<Container>(true);
+  container->justifyContent = Container::Alignment::Center;
+  container->alignItems = 0.5;
+  container->size = size;
+  container->children = nodes;
+  return container;
+}
+
+inline std::shared_ptr<Node>
+aside(std::initializer_list<std::shared_ptr<Node>> nodes) {
+  std::shared_ptr<Container> container = std::make_shared<Container>(true);
+  container->wrap = false;
+  container->alignItems = 1.0;
+  container->children = nodes;
+  return container;
+}
+
+template <typename... Nodes> inline std::shared_ptr<Node> inl(Nodes... nodes) {
+  std::shared_ptr<Container> container = std::make_shared<Container>();
+  container->wrap = false;
+  container->alignItems = 0.5;
+  container->children = {nodes...};
+  return container;
+}
+
+template <typename... Nodes>
+inline std::shared_ptr<Node> baseline(Nodes... nodes) {
+  std::shared_ptr<Container> container = std::make_shared<Container>();
+  container->wrap = false;
+  container->alignItems = 1;
+  container->children = {nodes...};
+  return container;
+}
+
+inline std::shared_ptr<Node> button(std::shared_ptr<Node> kid,
+                                    std::function<void()> onClick) {
+  return std::make_shared<Button>(kid, onClick);
+}
+
+inline std::shared_ptr<Node> label(String text, uint8_t size = 1,
+                                   uint16_t color = WHITE,
+                                   const GFXfont *font = nullptr) {
+  return std::make_shared<Label>(text, size, color, font);
+}
+
+inline std::shared_ptr<Node> flabel(std::function<String()> source,
+                                    uint8_t size = 1, uint16_t color = WHITE,
+                                    const GFXfont *font = nullptr) {
+  return std::make_shared<FunctionalLabel>(source, size, color, font);
+}
+
+inline std::shared_ptr<Node> icon(Icon icn) {
+  return std::make_shared<Image>(ICON_SIZE, iconImage(icn));
+}
+} // namespace shortcuts
 } // namespace ui

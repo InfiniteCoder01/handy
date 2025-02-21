@@ -10,12 +10,15 @@ Input input;
 void Input::init() { initRTC(); }
 
 void Input::update() {
-  bool active = false;
+  active = false;
   active |= left.tick();
   active |= right.tick();
   active |= up.tick();
   active |= down.tick();
   active |= ok.tick();
+
+  joy = vec2i(right.pressing() - left.pressing(),
+              down.pressing() - up.pressing());
 
   if (active) {
     lastActive = millis();

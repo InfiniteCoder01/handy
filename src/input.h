@@ -1,5 +1,8 @@
 #pragma once
+#include "OreonMath.hpp"
 #include <EncButton.h>
+
+using namespace VectorMath;
 
 extern struct Input {
   Button left = Button(6);
@@ -7,6 +10,8 @@ extern struct Input {
   Button up = Button(4);
   Button down = Button(5);
   Button ok = Button(3);
+  vec2i joy;
+  bool active;
   uint32_t lastActive;
 
   bool charging;

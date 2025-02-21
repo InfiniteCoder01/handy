@@ -1,5 +1,5 @@
 #pragma once
 
-namespace menu {
+namespace settings {
 void show();
 }

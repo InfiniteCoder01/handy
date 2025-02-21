@@ -135,7 +135,7 @@ static const uint16_t icons[] = {
 const VectorMath::vec2u ICON_SIZE = VectorMath::vec2u(24, 24);
 enum class Icon { Settings, Exit };
 
-inline const uint16_t *icon(const Icon icon) {
+inline const uint16_t *iconImage(const Icon icon) {
   return &icons[(size_t)icon * ICON_SIZE.x * ICON_SIZE.y];
 }
 } // namespace ui

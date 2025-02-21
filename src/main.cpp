@@ -20,25 +20,15 @@ void setup() {
   mainScreen.size = ui::screenSize();
   mainScreen.justifyContent = ui::Container::Alignment::Center;
 
-  auto center = std::make_shared<ui::Container>(
-      true, ui::Container::Alignment::Center, 1.0);
-  center->size.y = ui::screen.height(); // - status::bar.size.y;
-  {
-    auto time = std::make_shared<ui::Container>();
-    time->alignItems = 1.0;
-    *time << new ui::FunctionalLabel(formatTime1, 2, WHITE,
-                                     &FreeMonoBoldOblique9pt7b);
-    *time << new ui::FunctionalLabel(formatTime2, 1, WHITE,
-                                     &FreeMonoBoldOblique9pt7b);
-
-    *center << std::move(time);
-  }
-  *center << new ui::FunctionalLabel(formatDate);
-
+  using namespace ui::shortcuts;
   mainScreen << status::bar;
-  mainScreen << std::move(center);
-
-  menu::createUI();
+  mainScreen << vcenter(
+      {aside({
+          baseline(flabel(formatTime1, 2, WHITE, &FreeMonoBoldOblique9pt7b),
+                   flabel(formatTime2, 1, WHITE, &FreeMonoBoldOblique9pt7b)),
+          flabel(formatDate),
+      })},
+      vec2u(0, ui::screen.height() - 20));
 }
 
 void loop() {
@@ -46,10 +36,10 @@ void loop() {
   ui::screen.fillScreen(BLACK);
 
   mainScreen.layout(ui::screenSize());
-  mainScreen.draw(0);
+  mainScreen.draw(0, true);
   ui::show();
 
-  if (input.ok.click()) {
+  if (input.right.click()) {
     menu::show();
   }
 
