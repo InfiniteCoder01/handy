@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "app_icons.h"
 #include "input.h"
 #include "settings.h"
 #include "ui/status.h"
@@ -12,8 +13,9 @@ void show() {
   ui::Container menu;
   menu << status::bar;
   menu << list({
-      button(icon(ui::Icon::Settings), settings::show),
-      button(icon(ui::Icon::Exit), [&open]() { open = false; }),
+      button(image(APP_ICON_SIZE, appIcon(AppIcon::Settings)), settings::show),
+      button(image(APP_ICON_SIZE, appIcon(AppIcon::Exit)),
+             [&open]() { open = false; }),
   });
 
   while (open) {

@@ -1,5 +1,6 @@
 #include "settings.h"
 #include "input.h"
+#include "ui/icons.h"
 #include "ui/status.h"
 #include "ui/ui.h"
 #include "utils.h"
@@ -15,7 +16,8 @@ void show() {
     return input.charging ? "Battery is charging"
                           : format("Battery Voltage: %.2f", input.voltage);
   });
-  menu << button(inl(icon(ui::Icon::Settings), label("WiFi")), []() {});
+  menu << button(inl(image(ICON_SIZE, icon(Icon::WiFi)), label("WiFi")),
+                 []() {});
   menu << button(label("Exit"), [&open]() { open = false; });
 
   while (open) {

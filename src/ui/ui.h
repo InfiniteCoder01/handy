@@ -1,6 +1,5 @@
 #pragma once
 #include "display.h"
-#include "icons.h"
 #include <functional>
 #include <memory>
 #include <optional>
@@ -118,6 +117,15 @@ struct Image : Node {
   virtual bool draw(vec2i offset, bool focused) override;
 };
 
+struct FunctionalImage : Image {
+  std::function<const uint16_t *()> source;
+
+  FunctionalImage(vec2u size, std::function<const uint16_t *()> source)
+      : Image(size, source()), source(source) {}
+
+  virtual void layout(vec2u available) override;
+};
+
 namespace shortcuts {
 inline std::shared_ptr<Node>
 list(std::initializer_list<std::shared_ptr<Node>> nodes) {
@@ -196,8 +204,13 @@ inline std::shared_ptr<Node> flabel(std::function<String()> source,
   return std::make_shared<FunctionalLabel>(source, size, color, font);
 }
 
-inline std::shared_ptr<Node> icon(Icon icn) {
-  return std::make_shared<Image>(ICON_SIZE, iconImage(icn));
+inline std::shared_ptr<Node> image(vec2u size, const uint16_t *image) {
+  return std::make_shared<Image>(size, image);
+}
+
+inline std::shared_ptr<Node> fimage(vec2u size,
+                                    std::function<const uint16_t *()> source) {
+  return std::make_shared<FunctionalImage>(size, source);
 }
 } // namespace shortcuts
 } // namespace ui

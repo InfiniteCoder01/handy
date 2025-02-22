@@ -181,4 +181,10 @@ bool Image::draw(vec2i offset, bool focused) {
   drawImage(offset, computedSize, image);
   return false;
 }
+
+// *********************************************************** FunctionalImage
+void FunctionalImage::layout(vec2u available) {
+  image = source();
+  Image::layout(available);
+}
 } // namespace ui

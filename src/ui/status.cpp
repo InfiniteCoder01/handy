@@ -1,4 +1,5 @@
 #include "status.h"
+#include "icons.h"
 #include "input.h"
 #include "utils.h"
 
@@ -39,9 +40,13 @@ bool Battery::draw(vec2i offset, bool focused) {
 }
 
 void createUI() {
+  using namespace ui::shortcuts;
   bar->size.x = ui::screen.width();
   bar->wrap = false;
   *bar << new Battery();
-  *bar << new ui::FunctionalLabel(formatTime);
+  *bar << fimage(ICON_SIZE, []() {
+    return icon(millis() / 1000 % 2 ? Icon::WiFi : Icon::NoWiFi);
+  });
+  *bar << flabel(formatTime);
 }
 } // namespace status
