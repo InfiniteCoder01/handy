@@ -40,8 +40,7 @@ struct Container : Node {
 
   uint16_t cursor = 0;
 
-  enum Alignment { Start, Center, End, Fill } justifyContent = Alignment::Start;
-  float alignItems = 0.0;
+  float alignItems = 0.0, justifyContent = 0.0;
 
   Container(bool vertical = false) : Node(), vertical(vertical) {}
 
@@ -144,7 +143,7 @@ vlist(std::initializer_list<std::shared_ptr<Node>> nodes) {
 inline std::shared_ptr<Node>
 center(std::initializer_list<std::shared_ptr<Node>> nodes, vec2u size = 0) {
   std::shared_ptr<Container> container = std::make_shared<Container>();
-  container->justifyContent = Container::Alignment::Center;
+  container->justifyContent = 0.5;
   container->alignItems = 0.5;
   container->size = size;
   container->children = nodes;
@@ -154,7 +153,7 @@ center(std::initializer_list<std::shared_ptr<Node>> nodes, vec2u size = 0) {
 inline std::shared_ptr<Node>
 vcenter(std::initializer_list<std::shared_ptr<Node>> nodes, vec2u size = 0) {
   std::shared_ptr<Container> container = std::make_shared<Container>(true);
-  container->justifyContent = Container::Alignment::Center;
+  container->justifyContent = 0.5;
   container->alignItems = 0.5;
   container->size = size;
   container->children = nodes;

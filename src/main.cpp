@@ -18,7 +18,7 @@ void setup() {
 
   status::createUI();
   mainScreen.size = ui::screenSize();
-  mainScreen.justifyContent = ui::Container::Alignment::Center;
+  mainScreen.justifyContent = 0.5;
 
   using namespace ui::shortcuts;
   mainScreen << status::bar;

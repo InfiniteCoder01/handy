@@ -59,12 +59,6 @@ void Container::layout(vec2u available) {
   if (size.y > 0)
     computedSize.y = size.y;
 
-  float justifyContentAlignment = 0.0;
-  if (justifyContent == Alignment::Center)
-    justifyContentAlignment = 0.5;
-  else if (justifyContent == Alignment::End)
-    justifyContentAlignment = 1.0;
-
   size_t rowStart = 0;
   for (const size_t rowEnd : splits) {
     rowWidth = 0;
@@ -75,18 +69,12 @@ void Container::layout(vec2u available) {
       rowLength = (children[i]->pos + children[i]->computedSize).dot(mainDir);
     }
 
-    float offset =
-        (computedSize.dot(mainDir) - rowLength) * justifyContentAlignment;
-    float spacing = justifyContent == Alignment::Fill
-                        ? (computedSize.dot(mainDir) - rowLength) /
-                              (float)Math::max(rowEnd - rowStart - 1, 1)
-                        : 0.0;
+    float offset = (computedSize.dot(mainDir) - rowLength) * justifyContent;
     for (size_t i = rowStart; i < rowEnd; i++) {
       children[i]->pos +=
           (offDir * rowWidth - children[i]->computedSize * offDir) *
               alignItems +
           mainDir * offset;
-      offset += spacing;
     }
     rowStart = rowEnd;
   }
