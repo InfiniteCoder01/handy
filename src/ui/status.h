@@ -8,7 +8,7 @@ struct Battery : ui::Node {
   Battery() {}
 
   virtual void layout(vec2u available) override { computedSize = vec2u(4, 7); }
-  virtual bool draw(vec2i offset, bool focused) override;
+  virtual void draw(vec2i offset, bool focused) override;
 };
 
 extern std::shared_ptr<ui::Container> bar;

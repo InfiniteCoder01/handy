@@ -16,11 +16,11 @@ void init() {}
 void sleep() {
   ui::displayPower(false);
   Serial.flush();
+  Serial.end();
 
   dormant(3);
 
   ui::displayPower(true);
-  Serial.end();
   Serial.begin(9600);
 
   updateRTC();

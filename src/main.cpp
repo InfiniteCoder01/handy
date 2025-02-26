@@ -34,9 +34,7 @@ void setup() {
 void loop() {
   input.update();
   ui::screen.fillScreen(BLACK);
-
-  mainScreen.layout(ui::screenSize());
-  mainScreen.draw(0, true);
+  ui::serve(mainScreen);
   ui::show();
 
   if (input.right.click()) {

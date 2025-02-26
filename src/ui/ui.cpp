@@ -15,6 +15,15 @@ void showSplash(const String &text, const uint16_t color) {
   show();
 }
 
+void serve(Node &root) {
+  root.layout(ui::screenSize());
+  if (input.active && input.joy.dot(1)) {
+    if (!root.focusNext())
+      root.focus();
+  }
+  root.draw(0, true);
+}
+
 // ************************************************************** Container
 bool Container::focusable() {
   for (auto &child : children) {
@@ -80,41 +89,44 @@ void Container::layout(vec2u available) {
   }
 }
 
-bool Container::draw(vec2i offset, bool focused) {
-  if (focused) {
-    while (cursor < children.size() && !children[cursor]->focusable())
-      cursor++;
-    if (cursor >= children.size())
-      cursor = 0;
+void Container::focus() {
+  int8_t dir = input.joy.dot(1);
+  cursor = dir > 0 ? 0 : children.size() - 1;
+  while (cursor < children.size()) {
+    if (children[cursor]->focusable()) {
+      children[cursor]->focus();
+      break;
+    }
+    cursor += dir;
   }
+}
 
-  bool selectedHeld = false;
-  for (size_t i = 0; i < children.size(); i++) {
-    bool selected = focused && cursor == i;
-    bool hold = children[i]->draw(offset + children[i]->pos, selected);
-    if (selected)
-      selectedHeld = hold;
-  }
-
-  if (selectedHeld)
+bool Container::focusNext() {
+  if (cursor >= children.size())
+    return false;
+  if (children[cursor]->focusNext())
     return true;
 
-  if (input.active) {
-    bool hold = false;
-    while (input.joy.x > 0 ? cursor + 1 < children.size() : cursor > 0) {
-      cursor += input.joy.x;
-      if (children[cursor]->focusable()) {
-        hold = true;
-        break;
-      }
+  int8_t dir = input.joy.dot(1);
+  while (true) {
+    cursor += dir;
+    if (cursor >= children.size())
+      return false;
+    if (children[cursor]->focusable()) {
+      children[cursor]->focus();
+      return true;
     }
-    if (!hold)
-      cursor = 0;
-
-    return hold;
+    cursor += dir;
   }
-
   return false;
+}
+
+void Container::draw(vec2i offset, bool focused) {
+  while (cursor < children.size() && !children[cursor]->focusable())
+    cursor++;
+  for (size_t i = 0; i < children.size(); i++) {
+    children[i]->draw(offset + children[i]->pos, focused && cursor == i);
+  }
 }
 
 // ************************************************************** Button
@@ -124,14 +136,13 @@ void Button::layout(vec2u available) {
   computedSize = kid->computedSize + padding * 2;
 }
 
-bool Button::draw(vec2i offset, bool focused) {
-  bool hold = kid->draw(offset + padding, focused);
+void Button::draw(vec2i offset, bool focused) {
+  kid->draw(offset + padding, false);
   if (focused) {
     screen.drawRect(offset.x, offset.y, computedSize.x, computedSize.y, RED);
     if (input.ok.click())
       onClick();
   }
-  return hold;
 }
 
 // ************************************************************** Label
@@ -152,10 +163,9 @@ void Label::layout(vec2u available) {
   computedSize = vec2u(w, h) + focusable() * 2;
 }
 
-bool Label::draw(vec2i offset, bool focused) {
+void Label::draw(vec2i offset, bool focused) {
   setScreenSettings(offset + focusable());
   screen.print(text);
-  return false;
 }
 
 // *********************************************************** FunctionalLabel
@@ -165,9 +175,8 @@ void FunctionalLabel::layout(vec2u available) {
 }
 
 // ************************************************************** Image
-bool Image::draw(vec2i offset, bool focused) {
+void Image::draw(vec2i offset, bool focused) {
   drawImage(offset, computedSize, image);
-  return false;
 }
 
 // *********************************************************** FunctionalImage

@@ -6,10 +6,11 @@
 #include <vector>
 
 namespace ui {
-struct Container;
+struct Node;
 
 inline vec2u screenSize() { return vec2u(screen.width(), screen.height()); }
 void showSplash(const String &text, const uint16_t color = WHITE);
+void serve(Node &root);
 
 // ************************************************************** Nodes
 struct Node {
@@ -19,14 +20,17 @@ struct Node {
   virtual ~Node() = default;
 
   virtual bool focusable() { return false; }
+  virtual void focus() {}
+
+  // Try to move focus, returns true if holds focus in this element
+  virtual bool focusNext() { return false; }
 
   // Layout all the children relative to this node, compute the size,
   // limited to available space
   virtual void layout(vec2u available) { computedSize = available; }
 
-  // Draw relative to the offset (top-left of this item on the screen), returns
-  // true if holds focus
-  virtual bool draw(vec2i offset, bool focused) { return false; }
+  // Draw relative to the offset (top-left of this item on the screen)
+  virtual void draw(vec2i offset, bool focused) {}
 };
 
 struct Container : Node {
@@ -56,9 +60,13 @@ struct Container : Node {
     return *this;
   }
 
+  void clear() { children.clear(); }
+
   virtual bool focusable() override;
+  virtual void focus() override;
+  virtual bool focusNext() override;
   virtual void layout(vec2u available) override;
-  virtual bool draw(vec2i offset, bool focused) override;
+  virtual void draw(vec2i offset, bool focused) override;
 };
 
 struct Button : Node {
@@ -74,7 +82,7 @@ struct Button : Node {
 
   virtual bool focusable() override { return true; }
   virtual void layout(vec2u available) override;
-  virtual bool draw(vec2i offset, bool focused) override;
+  virtual void draw(vec2i offset, bool focused) override;
 };
 
 struct Label : Node {
@@ -91,7 +99,7 @@ struct Label : Node {
 
   void setScreenSettings(vec2i offset) const;
   virtual void layout(vec2u available) override;
-  virtual bool draw(vec2i offset, bool focused) override;
+  virtual void draw(vec2i offset, bool focused) override;
 };
 
 struct FunctionalLabel : Label {
@@ -113,7 +121,7 @@ struct Image : Node {
   }
 
   virtual void layout(vec2u available) override {}
-  virtual bool draw(vec2i offset, bool focused) override;
+  virtual void draw(vec2i offset, bool focused) override;
 };
 
 struct FunctionalImage : Image {

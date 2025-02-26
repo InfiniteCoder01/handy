@@ -2,6 +2,7 @@
 #include "icons.h"
 #include "input.h"
 #include "utils.h"
+#include <WiFi.h>
 
 namespace status {
 std::shared_ptr<ui::Container> bar = std::make_shared<ui::Container>();
@@ -15,7 +16,7 @@ static const uint16_t batteryIcons[] = {
     0xffff, 0x0000, 0x0000, 0xffff, 0xffff, 0xffff, 0x0000, 0xffff,
     0xffff, 0x0000, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff};
 
-bool Battery::draw(vec2i offset, bool focused) {
+void Battery::draw(vec2i offset, bool focused) {
   if (input.charging) {
     ui::drawImage(offset, computedSize,
                   batteryIcons + computedSize.x * computedSize.y);
@@ -36,7 +37,6 @@ bool Battery::draw(vec2i offset, bool focused) {
     ui::screen.fillRect(offset.x + 1, offset.y + computedSize.y - height - 1,
                         computedSize.x - 2, height, color);
   }
-  return false;
 }
 
 void createUI() {
@@ -45,7 +45,7 @@ void createUI() {
   bar->wrap = false;
   *bar << new Battery();
   *bar << fimage(ICON_SIZE, []() {
-    return icon(millis() / 1000 % 2 ? Icon::WiFi : Icon::NoWiFi);
+    return icon(WiFi.isConnected() ? Icon::WiFi : Icon::NoWiFi);
   });
   *bar << flabel(formatTime);
 }

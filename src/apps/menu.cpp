@@ -21,9 +21,7 @@ void show() {
   while (open) {
     input.update();
     ui::screen.fillScreen(BLACK);
-
-    menu.layout(ui::screenSize());
-    menu.draw(0, true);
+    ui::serve(menu);
     ui::show();
 
     if (millis() - input.lastActive > 5000) {
