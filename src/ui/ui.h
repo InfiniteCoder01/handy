@@ -1,5 +1,5 @@
 #pragma once
-#include "display.h"
+#include "hardware/display.h"
 #include <functional>
 #include <memory>
 #include <optional>
@@ -10,6 +10,7 @@ struct Node;
 
 inline vec2u screenSize() { return vec2u(screen.width(), screen.height()); }
 void showSplash(const String &text, const uint16_t color = WHITE);
+String prompt(std::shared_ptr<Node> text);
 void serve(Node &root);
 
 // ************************************************************** Nodes

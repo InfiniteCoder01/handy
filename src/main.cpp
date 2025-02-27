@@ -1,6 +1,8 @@
 #include "apps/menu.h"
-#include "input.h"
-#include "power.h"
+#include "hardware/input.h"
+#include "hardware/power.h"
+#include "hardware/time.h"
+#include "hardware/wifi.h"
 #include "ui/status.h"
 #include "ui/ui.h"
 #include <Arduino.h>
@@ -33,6 +35,7 @@ void setup() {
 
 void loop() {
   input.update();
+  wifi::tick();
   ui::screen.fillScreen(BLACK);
   ui::serve(mainScreen);
   ui::show();

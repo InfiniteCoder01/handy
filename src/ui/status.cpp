@@ -1,6 +1,7 @@
 #include "status.h"
+#include "hardware/input.h"
+#include "hardware/time.h"
 #include "icons.h"
-#include "input.h"
 #include "utils.h"
 #include <WiFi.h>
 

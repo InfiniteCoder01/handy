@@ -1,9 +1,12 @@
 #include "settings.h"
-#include "input.h"
+#include "hardware/input.h"
+#include "hardware/power.h"
+#include "hardware/wifi.h"
 #include "ui/icons.h"
 #include "ui/status.h"
 #include "ui/ui.h"
 #include "utils.h"
+
 #include <WiFi.h>
 
 namespace settings {
@@ -22,24 +25,11 @@ void show() {
 
   while (open) {
     input.update();
+    wifi::tick();
     ui::screen.fillScreen(BLACK);
     ui::serve(menu);
     ui::show();
   }
-}
-
-const char *encToString(uint8_t enc) {
-  switch (enc) {
-  case ENC_TYPE_NONE:
-    return "NONE";
-  case ENC_TYPE_TKIP:
-    return "WPA";
-  case ENC_TYPE_CCMP:
-    return "WPA2";
-  case ENC_TYPE_AUTO:
-    return "AUTO";
-  }
-  return "UNKN";
 }
 
 void wifi() {
@@ -52,11 +42,28 @@ void wifi() {
               button(label("Exit"), [&open]() { open = false; }));
 
   const auto network = [](uint8_t idx) {
-    // encToString(WiFi.encryptionType(idx))
-    return button(
-        inl(image(ICON_SIZE, icon(Icon::WiFi)), label(WiFi.SSID(idx))), []() {
-          // WiFi.con
-        });
+    String ssid = WiFi.SSID(idx);
+    uint8_t enc = WiFi.encryptionType(idx);
+    const char *encs = "UNKN";
+    if (enc == ENC_TYPE_NONE)
+      encs = "NONE";
+    else if (enc == ENC_TYPE_TKIP)
+      encs = "WPA";
+    else if (enc == ENC_TYPE_CCMP)
+      encs = "WPA2";
+    else if (enc == ENC_TYPE_AUTO)
+      encs = "AUTO";
+
+    return button(inl(image(ICON_SIZE, icon(Icon::WiFi)),
+                      label(format("%s %s", ssid.c_str(), encs))),
+                  [ssid, enc]() {
+                    String password;
+                    if (enc != ENC_TYPE_NONE)
+                      password = ui::prompt(
+                          vcenter({label("Enter password for"), label(ssid)}));
+
+                    wifi::knownNetworks[ssid] = password;
+                  });
   };
   auto networks = std::make_shared<ui::Container>(true);
   menu << networks;
@@ -71,6 +78,7 @@ void wifi() {
     }
 
     input.update();
+    wifi::tick(false);
     ui::screen.fillScreen(BLACK);
     ui::serve(menu);
     ui::show();

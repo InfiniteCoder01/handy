@@ -1,6 +1,7 @@
 #include "ui.h"
-#include "display.h"
-#include "input.h"
+#include "hardware/display.h"
+#include "hardware/input.h"
+#include "status.h"
 
 namespace ui {
 void showSplash(const String &text, const uint16_t color) {
@@ -13,6 +14,69 @@ void showSplash(const String &text, const uint16_t color) {
   screen.setCursor((screen.width() - w) / 2, (screen.height() - h) / 2);
   screen.print(text);
   show();
+}
+
+String prompt(std::shared_ptr<Node> prompt) {
+  const String keymap = "\0171234567890-=\010\nabcdefghijklmnopqrstuvwxyz";
+  const String keymapShift = "\017!?.,%?&*()_+\010\nABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  bool shift = false, done = false;
+  String text = "";
+
+  using namespace ui::shortcuts;
+  auto keyboard = std::make_shared<Container>();
+  for (size_t i = 0; i < keymap.length(); i++) {
+    const auto ch = [i, &shift, &keymap, &keymapShift]() {
+      return (shift ? keymapShift : keymap)[i];
+    };
+    *keyboard << button(flabel([ch]() {
+                          char key = ch();
+                          if (key == '\017')
+                            return String("Sh");
+                          if (key == '\010')
+                            return String("<-");
+                          if (key == '\n')
+                            return String("En");
+                          else
+                            return String(key);
+                        }),
+                        [ch, &shift, &done, &text]() {
+                          char key = ch();
+                          if (key == '\017')
+                            shift = !shift;
+                          else if (key == '\010')
+                            text.remove(text.length() - 1);
+                          else if (key == '\n')
+                            done = true;
+                          else {
+                            text += key;
+                            shift = false;
+                          }
+                        });
+  }
+
+  keyboard->layout(screenSize());
+  auto promptEl =
+      center({prompt}, screenSize() - vec2u(0, keyboard->computedSize.y + 20));
+
+  ui::Container layout(true);
+  layout << status::bar;
+  layout << std::move(promptEl);
+  layout << flabel([&text]() { return text; });
+  layout << std::move(keyboard);
+
+  while (!done) {
+    if (Serial.available()) {
+      text = Serial.readStringUntil('\n');
+      done = true;
+    }
+
+    input.update();
+    ui::screen.fillScreen(BLACK);
+    ui::serve(layout);
+    ui::show();
+  }
+  return text;
 }
 
 void serve(Node &root) {
