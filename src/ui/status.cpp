@@ -1,4 +1,5 @@
 #include "status.h"
+#include "hardware/bluetooth.h"
 #include "hardware/input.h"
 #include "hardware/time.h"
 #include "icons.h"
@@ -47,6 +48,10 @@ void createUI() {
   *bar << new Battery();
   *bar << fimage(ICON_SIZE, []() {
     return icon(WiFi.isConnected() ? Icon::WiFi : Icon::NoWiFi);
+  });
+  *bar << fimage(ICON_SIZE, []() {
+    return icon(bluetooth::a2dp.connected() ? Icon::Bluetooth
+                                            : Icon::NoBluetooth);
   });
   *bar << flabel(formatTime);
 }

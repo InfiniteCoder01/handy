@@ -1,4 +1,5 @@
 #include "apps/menu.h"
+#include "hardware/bluetooth.h"
 #include "hardware/input.h"
 #include "hardware/power.h"
 #include "hardware/time.h"
@@ -7,6 +8,10 @@
 #include "ui/ui.h"
 #include <Arduino.h>
 #include <Fonts/FreeMonoBoldOblique9pt7b.h>
+
+#if __has_include("secrets.h")
+#include "secrets.h"
+#endif
 
 static ui::Container mainScreen;
 
@@ -17,6 +22,10 @@ void setup() {
   power::init();
   ui::initializeDisplay();
   input.init();
+
+#if defined(HOME_WIFI_SSID) && defined(HOME_WIFI_PASS)
+  wifi::knownNetworks[HOME_WIFI_SSID] = HOME_WIFI_PASS;
+#endif
 
   status::createUI();
   mainScreen.size = ui::screenSize();
@@ -36,6 +45,7 @@ void setup() {
 void loop() {
   input.update();
   wifi::tick();
+  bluetooth::silence();
   ui::screen.fillScreen(BLACK);
   ui::serve(mainScreen);
   ui::show();

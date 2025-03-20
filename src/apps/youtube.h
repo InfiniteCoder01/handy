@@ -1,5 +1,5 @@
 #pragma once
 
-namespace ytmusic {
+namespace youtube {
 void show();
 }

@@ -1,6 +1,6 @@
 #include "settings.h"
+#include "hardware/bluetooth.h"
 #include "hardware/input.h"
-#include "hardware/power.h"
 #include "hardware/wifi.h"
 #include "ui/icons.h"
 #include "ui/status.h"
@@ -21,11 +21,15 @@ void show() {
                           : format("Battery Voltage: %.2f", input.voltage);
   });
   menu << button(inl(image(ICON_SIZE, icon(Icon::WiFi)), label("WiFi")), wifi);
+  menu << button(
+      inl(image(ICON_SIZE, icon(Icon::Bluetooth)), label("Bluetooth")),
+      bluetooth);
   menu << button(label("Exit"), [&open]() { open = false; });
 
   while (open) {
     input.update();
     wifi::tick();
+    bluetooth::silence();
     ui::screen.fillScreen(BLACK);
     ui::serve(menu);
     ui::show();
@@ -79,6 +83,44 @@ void wifi() {
 
     input.update();
     wifi::tick(false);
+    bluetooth::silence();
+    ui::screen.fillScreen(BLACK);
+    ui::serve(menu);
+    ui::show();
+  }
+}
+
+void bluetooth() {
+  bool open = true;
+
+  using namespace ui::shortcuts;
+  ui::Container menu(true);
+  menu << status::bar;
+  menu << button(label("Exit"), [&open]() { open = false; });
+
+  const auto device = [](uint8_t idx) {};
+  auto devices = std::make_shared<ui::Container>(true);
+  bluetooth::a2dp.begin();
+  auto devl = bluetooth::a2dp.scan(BluetoothHCI::speaker_cod, 5);
+  for (auto dev : devl) {
+    *devices << button(
+        inl(image(ICON_SIZE, icon(Icon::Bluetooth)), label(dev.name())),
+        [dev]() {
+          auto d = dev;
+          if (bluetooth::a2dp.connect(d.address())) {
+            int16_t pcm[256];
+            bzero(pcm, sizeof(pcm));
+            bluetooth::a2dp.write((const uint8_t *)pcm, sizeof(pcm));
+          }
+        });
+  }
+
+  menu << devices;
+
+  while (open) {
+    input.update();
+    wifi::tick();
+    bluetooth::silence();
     ui::screen.fillScreen(BLACK);
     ui::serve(menu);
     ui::show();

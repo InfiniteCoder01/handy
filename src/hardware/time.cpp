@@ -9,7 +9,7 @@ void initRTC() {
   rtc.begin();
 
   if (!rtc.isrunning() || now > rtc.now()) {
-    ui::showSplash("Reset RTC!", RED);
+    ui::showSplash("Reset RTC! ", RED);
     rtc.adjust(now);
     delay(1000);
   }
