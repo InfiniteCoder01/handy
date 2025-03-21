@@ -7,6 +7,8 @@
 #include "utils.h"
 #include <OreonMath.hpp>
 
+#include "flap_graphics.h"
+
 using namespace VectorMath;
 
 static vec2f cmul(vec2f a, vec2f b) {
@@ -17,9 +19,8 @@ namespace flap {
 void play() {
   while (true) {
     const int16_t offset = ui::screen.width() / 4;
-    const float velocityX = 50.0;
     vec2f position = vec2f(0.0, ui::screen.height() / 2);
-    vec2f velocity = vec2f(velocityX, 0);
+    vec2f velocity = vec2f(50.0, 0);
 
     const int16_t pipeWidth = 20;
     struct Pipe {
@@ -31,6 +32,7 @@ void play() {
 
     uint32_t lastTime = millis();
     bool alive = true;
+    uint64_t score = 0;
     while (position.y < ui::screen.height()) {
       input.update();
       wifi::tick();
@@ -43,15 +45,18 @@ void play() {
         lastTime = t;
       }
 
+      const vec2f lastVel = velocity;
+
       if (alive) {
         if (pipes.empty() ||
             (pipes.back().x - position.x < ui::screen.width() / 2 &&
              pipes.size() < 2 && rand() % 100 < 2)) {
-          int16_t gapSize = rand() % 10 + 30;
+          int16_t gapSize = rand() % 10 + 20;
           pipes.push_back(Pipe{
               .x = position.x + (float)ui::screen.width(),
               .gapY =
-                  (int16_t)(rand() % (ui::screen.height() - gapSize - 6) + 3),
+                  (int16_t)(rand() % (ui::screen.height() - gapSize - 6 - 16) +
+                            3),
               .gapSize = gapSize,
           });
         }
@@ -60,20 +65,13 @@ void play() {
       velocity.y += 60.0 * deltaTime;
 
       if (alive) {
-        if (velocity.y > 0.0 && input.down.pressing()) {
-          velocity.y *= 0.95;
-          velocity.x += (velocityX * 1.5 - velocity.x) * 0.05;
-        } else {
-          velocity.x = velocityX;
-          if (input.up.press())
-            velocity.y = -70.0;
-          else if (input.up.release() && velocity.y < 0)
-            velocity.y *= 0.5;
-        }
+        if (input.up.pressing())
+          velocity.y = velocity.y - 150.0 * deltaTime;
       } else {
         velocity.x = 0;
       }
 
+      const vec2f oldpos = position;
       position += velocity * deltaTime;
 
       if (alive) {
@@ -86,30 +84,50 @@ void play() {
                 position.y > pipes[i].gapY + pipes[i].gapSize) {
               alive = false;
             }
+            if (pipes[i].x + pipeWidth / 2 - oldpos.x > offset &&
+                pipes[i].x + pipeWidth / 2 - position.x <= offset) {
+              score++;
+            }
           }
         }
       }
 
-      if (position.y < 0 || position.y >= ui::screen.height())
+      if (position.y < 0 || position.y >= ui::screen.height() - 16)
         alive = false;
 
-      ui::screen.fillScreen(BLACK);
+      ui::screen.fillScreen(0x961f);
+      for (int16_t offset = 0; offset <= 192; offset += 64) {
+        ui::screen.drawRGBBitmap(offset - (int16_t)(position.x * 0.5) % 64,
+                                 ui::screen.height() - 47, background, 64, 47);
+      }
 
       for (const auto &pipe : pipes) {
-        ui::screen.fillRect(pipe.x - position.x,
-                            pipe.gapY - ui::screen.height(), pipeWidth,
-                            ui::screen.height(), WHITE);
-        ui::screen.fillRect(pipe.x - position.x, pipe.gapY + pipe.gapSize,
-                            pipeWidth, ui::screen.height(), WHITE);
+        ui::drawImage(
+            vec2i(pipe.x - position.x, pipe.gapY - ui::screen.height()),
+            vec2u(pipeWidth, ui::screen.height()), pipeD);
+        ui::drawImage(vec2i(pipe.x - position.x, pipe.gapY + pipe.gapSize),
+                      vec2u(pipeWidth, ui::screen.height()), pipeU);
+      }
+
+      for (int16_t offset = 0; offset < ui::screen.width() + 16; offset += 16) {
+        ui::screen.drawRGBBitmap(offset - (int16_t)position.x % 16,
+                                 ui::screen.height() - 16, ground, 16, 16);
       }
 
       {
-        const vec2f dir = velocity.normalized();
+        const vec2f accel = (velocity - lastVel) / deltaTime;
+        const vec2f dir = (velocity + accel * 0.07).normalized();
         const vec2f p1 = cmul(vec2f(0, -3), dir) + vec2f(offset, position.y);
         const vec2f p2 = cmul(vec2f(5, 0), dir) + vec2f(offset, position.y);
         const vec2f p3 = cmul(vec2f(0, 3), dir) + vec2f(offset, position.y);
         ui::screen.drawLine(p1.x, p1.y, p2.x, p2.y, WHITE);
         ui::screen.drawLine(p2.x, p2.y, p3.x, p3.y, WHITE);
+        ui::screen.setCursor(0, 0);
+        ui::screen.setFont();
+        ui::screen.setTextSize(1);
+        ui::screen.setTextColor(WHITE);
+        ui::screen.println(format("Score: %d", score));
+        // ui::screen.println(format("FPS: %.01f", 1.0 / deltaTime));
       }
 
       ui::show();
@@ -125,7 +143,7 @@ void play() {
       gameOverScreen << vcenter(
           {
               label("Game Over!"),
-              label(format("Your score is %d", 0)),
+              label(format("Your score is %d", score)),
               inl(button(label("Respawn"), [&]() { respawn = true; }),
                   button(label("Exit"), [&]() { exit = true; })),
           },

@@ -1,13 +1,13 @@
 #include "menu.h"
-#include "app_icons.h"
-#include "flap.h"
+#include "apps/app_icons.h"
+#include "apps/flap/flap.h"
+#include "apps/settings/settings.h"
+#include "apps/youtube/youtube.h"
 #include "hardware/bluetooth.h"
 #include "hardware/input.h"
 #include "hardware/wifi.h"
-#include "settings.h"
 #include "ui/status.h"
 #include "ui/ui.h"
-#include "youtube.h"
 
 namespace menu {
 void show() {
