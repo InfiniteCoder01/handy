@@ -2,8 +2,15 @@
 #include "ui/ui.h"
 #include "utils.h"
 
+#include <NTPClient.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
+
 DateTime now = DateTime(__DATE__, __TIME__);
 static DS1302 rtc(9, 7, 8);
+
+static WiFiUDP ntpUDP;
+static NTPClient ntp(ntpUDP);
 
 void initRTC() {
   rtc.begin();
@@ -14,9 +21,18 @@ void initRTC() {
     delay(1000);
   }
   now = rtc.now();
+  ntp.begin();
+  ntp.setTimeOffset(3 * 60 * 60);
 }
 
-void updateRTC() { now = rtc.now(); }
+void updateRTC() {
+  if (WiFi.isConnected()) {
+    if (ntp.update()) {
+      rtc.adjust(DateTime(ntp.getEpochTime()));
+    }
+  }
+  now = rtc.now();
+}
 
 String formatTime1() {
   return format("%02u:%02u", (now.hour() + 11) % 12 + 1, now.minute());
