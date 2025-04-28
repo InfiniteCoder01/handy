@@ -3,6 +3,7 @@
 #include "apps/flap/flap.h"
 #include "apps/settings/settings.h"
 #include "apps/youtube/youtube.h"
+#include "apps/stopwatch/stopwatch.h"
 #include "hardware/bluetooth.h"
 #include "hardware/input.h"
 #include "hardware/wifi.h"
@@ -18,6 +19,7 @@ void show() {
   menu << status::bar;
   menu << list({
       button(image(APP_ICON_SIZE, appIcon(AppIcon::Settings)), settings::show),
+      button(image(APP_ICON_SIZE, appIcon(AppIcon::Stopwatch)), stopwatch::show),
       button(image(APP_ICON_SIZE, appIcon(AppIcon::YouTube)), youtube::show),
       button(image(APP_ICON_SIZE, appIcon(AppIcon::Flap)), flap::play),
       button(image(APP_ICON_SIZE, appIcon(AppIcon::Exit)),
