@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <RTClib.h>
 
+// Time
 extern DateTime now;
 
 void initRTC();

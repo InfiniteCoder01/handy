@@ -1,13 +1,12 @@
-#include "time.h"
-#include "ui/ui.h"
-#include "utils.h"
+#include "hardware.hpp"
+#include "format.hpp"
 
 #include <NTPClient.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
 DateTime now = DateTime(__DATE__, __TIME__);
-static DS1302 rtc(9, 7, 8);
+static DS1302 rtc(22, 27, 26);
 
 static WiFiUDP ntpUDP;
 static NTPClient ntp(ntpUDP);
@@ -16,10 +15,13 @@ void initRTC() {
   rtc.begin();
 
   if (!rtc.isrunning() || now > rtc.now()) {
-    ui::showSplash("Reset RTC! ", RED);
+    // ui::showSplash("Reset RTC! ", RED);
     rtc.adjust(now);
     delay(1000);
   }
+  Serial.print("TIME: ");
+  Serial.println(formatTime());
+  delay(5000);
   now = rtc.now();
   ntp.begin();
   ntp.setTimeOffset(3 * 60 * 60);
