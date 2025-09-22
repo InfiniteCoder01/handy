@@ -1,4 +1,5 @@
 #include <U8g2_for_Adafruit_GFX.h>
+#include <WiFi.h>
 #include "hardware.hpp"
 #include "display.hpp"
 
@@ -18,10 +19,15 @@ void bar() {
 
   u8g2.setFont(u8g2_font_siji_t_6x10);
   u8g2.setFontMode(1);
-  const uint8_t iconsY = (BAR_HEIGHT + u8g2.getFontAscent() + u8g2.getFontDescent()) / 2;
+  const uint8_t iconsY = (BAR_HEIGHT + u8g2.getFontAscent()) / 2 + 1;
   const uint8_t iconW = u8g2.u8g2.font_info.max_char_width;
-  
-  if (!charging()) {  // Battery
+
+  uint8_t barRight;
+  // Battery
+  if (charging()) {
+    barRight = screen.width() - iconW - 1;
+    u8g2.drawGlyph(barRight, iconsY, 0xe20e);
+  } else {
     const float BAT_LOW = 3.5, BAT_HIGH = 4.05;
     float v = voltage() + 0.3;  // Add compensation for diode voltage drop
     float percentage = constrain((v - BAT_LOW) / (BAT_HIGH - BAT_LOW), 0.0, 1.0);
@@ -30,15 +36,20 @@ void bar() {
     const uint8_t height = 4;
     const uint8_t x = screen.width() - width - 7;
     const uint8_t y = (BAR_HEIGHT - height) / 2;
+    barRight = x - 3;
     screen.drawRect(x - 2, y - 2, width + 4, height + 4, 0xffff);
     screen.fillRect(x + width + 2, y + height / 2 - 1, 1, 2, 0xffff);
 
-    screen.fillRect(x, y, width, height * percentage, 0xffff);
-  } else u8g2.drawGlyph(screen.width() - iconW - 2, iconsY, 0xe20e);
-  u8g2.drawGlyph(screen.width() - iconW * 2 - 2, iconsY, 0xe21a);
+    screen.fillRect(x, y, width * percentage, height, 0xffff);
+  }
+  {
+    uint16_t icon = 0xe217;
+    if (WiFi.isConnected()) icon = 0xe217 + round(constrain(map(WiFi.RSSI(), -100, -30, 0, 100) / 100.0, 0.0, 1.0) * 3);
+    u8g2.drawGlyph(barRight - iconW, iconsY, icon);
+  }
 
   defaultFont();
-  u8g2.setCursor(0, (BAR_HEIGHT + u8g2.getFontAscent() + u8g2.getFontDescent()) / 2);
+  u8g2.setCursor(2, (BAR_HEIGHT + u8g2.getFontAscent()) / 2);
   u8g2.print(formatTime().c_str());
 }
 
