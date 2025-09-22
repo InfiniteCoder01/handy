@@ -17,7 +17,6 @@ void initRTC() {
   if (!rtc.isrunning() || now > rtc.now()) {
     // ui::showSplash("Reset RTC! ", RED);
     rtc.adjust(now);
-    delay(1000);
   }
 
   now = rtc.now();
@@ -26,7 +25,9 @@ void initRTC() {
 }
 
 void updateRTC() {
-  if (WiFi.isConnected()) {
+  static uint32_t lastUpdated;
+  if (WiFi.isConnected() && millis() - lastUpdated > 2000) {
+    lastUpdated = millis();
     if (ntp.update()) {
       rtc.adjust(DateTime(ntp.getEpochTime()));
     }
