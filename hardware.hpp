@@ -1,6 +1,26 @@
 #pragma once
 #include <Arduino.h>
 #include <RTClib.h>
+#include <map>
+
+// Input
+struct Input {
+  bool a = false;
+  bool b = false;
+  bool c = false;
+  bool d = false;
+  uint32_t lastActive = 0;
+
+  bool active() { return lastActive == 0 || lastActive > 1000; }
+};
+
+extern Input input;
+void setupInput();
+void updateInput(bool allowSleep = false);
+
+// WiFi
+extern std::map<String, String> knownWiFiNetworks;
+void updateWiFi();
 
 // Time
 extern DateTime now;
@@ -11,3 +31,8 @@ String formatTime1();
 String formatTime2();
 String formatTime();
 String formatDate();
+
+// Power
+bool charging();
+float voltage();
+void sleep();

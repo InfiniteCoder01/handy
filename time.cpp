@@ -19,9 +19,7 @@ void initRTC() {
     rtc.adjust(now);
     delay(1000);
   }
-  Serial.print("TIME: ");
-  Serial.println(formatTime());
-  delay(5000);
+
   now = rtc.now();
   ntp.begin();
   ntp.setTimeOffset(3 * 60 * 60);
@@ -40,12 +38,18 @@ String formatTime1() {
   return format("%02u:%02u", (now.hour() + 11) % 12 + 1, now.minute());
 }
 
-String formatTime2() { return now.hour() >= 12 ? "PM" : "AM"; }
-String formatTime() { return formatTime1() + formatTime2(); }
+String formatTime2() {
+  return format("%02u %s", now.second(), now.hour() >= 12 ? "PM" : "AM");
+}
+
+String formatTime() {
+  return formatTime1() + (now.hour() >= 12 ? "PM" : "AM");
+}
+
 String formatDate() {
-  const char *dow[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-  const char *mon[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  const char *dow[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+  const char *mon[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
   return format("%s, %s %d, %d", dow[now.dayOfWeek()], mon[now.month() - 1],
                 now.day(), now.year());
 }
