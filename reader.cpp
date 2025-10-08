@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <LittleFS.h>
+#include <vector>
 #include "hardware.hpp"
 #include "display.hpp"
 
@@ -27,13 +28,9 @@ uint8_t pageReader(String text) {
     Serial.println("Before display");
     screen.fillScreen(0);
     ui::bar();
-    Serial.println("Before setCursor");
     u8g2.setCursor(0, u8g2.getFontAscent() + ui::BAR_HEIGHT);
-    Serial.println("Before print");
     ui::print(lineOffsets[scroll], chr_callback);
-    Serial.println("Before update");
     updateDisplay();
-    Serial.println("Frame done.");
   }
   return 0;
 }
