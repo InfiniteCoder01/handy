@@ -40,9 +40,9 @@ void bar() {
     screen.drawRect(x - 2, y - 2, width + 4, height + 4, 0xffff);
     screen.fillRect(x + width + 2, y + height / 2 - 1, 1, 2, 0xffff);
 
-    uint8_t r = percentage < 0.5 ? map(percentage * 100, 0, 50, 255, 192) : map(percentage * 100, 50, 100, 192, 0);
-    uint8_t g = percentage < 0.5 ? map(percentage * 100, 0, 50, 0, 192) : map(percentage * 100, 50, 100, 192, 255);
-    screen.fillRect(x, y, width * percentage, height, ((uint16_t)r >> 3 << 11) | ((uint16_t)g >> 2 << 5));
+    uint16_t r = (uint16_t)min(round((1.0 - percentage) * 40), 31) << 11;
+    uint16_t g = (uint16_t)min(round(percentage * 80.0), 63) << 5;
+    screen.fillRect(x, y, width * percentage, height, r | g);
   }
   {
     uint16_t icon = 0xe217;
