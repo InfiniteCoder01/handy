@@ -40,8 +40,8 @@ void bar() {
     screen.drawRect(x - 2, y - 2, width + 4, height + 4, 0xffff);
     screen.fillRect(x + width + 2, y + height / 2 - 1, 1, 2, 0xffff);
 
-    uint16_t r = (uint16_t)min(round((1.0 - percentage) * 40), 31) << 11;
-    uint16_t g = (uint16_t)min(round(percentage * 80.0), 63) << 5;
+    uint16_t r = (uint16_t)min(round((1.0 - percentage) * 62), 31) << 11;
+    uint16_t g = (uint16_t)min(round(percentage * 126.0), 61) << 5;
     screen.fillRect(x, y, width * percentage, height, r | g);
   }
   {
