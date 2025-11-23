@@ -17,10 +17,8 @@ void sleep() {
   dormant(4);
 
   Serial.begin(115200);
-  displayPower(true);
-
   updateRTC();
-  input.lastActive = 0;
+  displayPower(true);
 }
 
 // Source:

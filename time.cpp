@@ -27,9 +27,9 @@ void initRTC() {
 void updateRTC() {
   static uint32_t lastUpdated;
   if (WiFi.isConnected() && millis() - lastUpdated > 2000) {
-    lastUpdated = millis();
     if (ntp.update()) {
       rtc.adjust(DateTime(ntp.getEpochTime()));
+      lastUpdated = millis();
     }
   }
   now = rtc.now();
