@@ -11,8 +11,8 @@ void setup() {
   setupInput();
   setupDisplay();
 
-#if defined(HOME_WIFI_SSID) && defined(HOME_WIFI_PASS)
-  knownWiFiNetworks[HOME_WIFI_SSID] = HOME_WIFI_PASS;
+#ifdef SECRETS
+  addWifiNetworks();
 #endif
 
   background = loadImage("background.bmp");
