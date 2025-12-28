@@ -10,10 +10,7 @@ void setup() {
   initRTC();
   setupInput();
   setupDisplay();
-
-#ifdef SECRETS
   addWifiNetworks();
-#endif
 
   background = loadImage("background.bmp");
 }
