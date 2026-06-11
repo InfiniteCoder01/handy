@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include <RTClib.h>
+#include <time.h>
 #include <map>
 
 // Input
@@ -23,7 +23,7 @@ extern std::map<String, String> knownWiFiNetworks;
 void updateWiFi();
 
 // Time
-extern DateTime now;
+extern datetime_t now;
 
 void initRTC();
 void updateRTC();

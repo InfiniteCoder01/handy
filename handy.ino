@@ -5,7 +5,7 @@
 
 static uint16_t *background;
 void setup() {
-  Serial.begin(115200);
+  Serial.begin();
   LittleFS.begin();
   initRTC();
   setupInput();

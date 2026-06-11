@@ -1,5 +1,5 @@
-#include "hardware.hpp"
 #include "display.hpp"
+#include "hardware.hpp"
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -14,7 +14,7 @@ void sleep() {
   Serial.end();
   WiFi.end();
 
-  dormant(4);
+  dormant(27);
 
   Serial.begin(115200);
   updateRTC();
@@ -71,20 +71,36 @@ float voltage() {
 #include <hardware/pll.h>
 #include <hardware/xosc.h>
 #include <pico/runtime_init.h>
+#include <pico/stdlib.h>
+
+inline static void rosc_write(io_rw_32 *addr, uint32_t value) {
+  hw_clear_bits(&rosc_hw->status, ROSC_STATUS_BADWRITE_BITS);
+  assert(!(rosc_hw->status & ROSC_STATUS_BADWRITE_BITS));
+  *addr = value;
+  assert(!(rosc_hw->status & ROSC_STATUS_BADWRITE_BITS));
+}
 
 static void dormant(uint8_t pin) {
-  /*
-  16.8mA - regular dormant
-  2.3mA - cyw43_deinit(&cyw43_state) or cyw43_arch_deinit()
-  1.5mA - same + WiFi.end() (?, not sure if that's because WiFi.end())
-  */
-
   cyw43_arch_deinit();
-
-  gpio_set_dormant_irq_enabled(
-      pin, IO_BANK0_DORMANT_WAKE_INTE0_GPIO0_EDGE_LOW_BITS, true);
+  const auto freq = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_ROSC_CLKSRC) * KHZ;
+  // clock_configure(clk_ref, CLOCKS_CLK_REF_CTRL_SRC_VALUE_ROSC_CLKSRC_PH, 0,
+  //                 freq, freq);
+  // clock_configure(clk_sys, CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF, 0, freq,
+  //                 freq);
+  // clock_stop(clk_adc);
+  // clock_stop(clk_usb);
+  clock_configure(clk_rtc, 0, CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH,
+                  freq, 46875);
+  // clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS, freq,
+  //                 freq);
+  // pll_deinit(pll_sys);
+  // pll_deinit(pll_usb);
+  gpio_set_dormant_irq_enabled(pin, IO_BANK0_DORMANT_WAKE_INTE0_GPIO0_EDGE_LOW_BITS, true);
+  
   xosc_dormant();
-  gpio_acknowledge_irq(pin, IO_BANK0_DORMANT_WAKE_INTE0_GPIO0_EDGE_LOW_BITS);
 
+  gpio_acknowledge_irq(pin, IO_BANK0_DORMANT_WAKE_INTE0_GPIO0_EDGE_LOW_BITS);
+  // clocks_init();
+  Serial.begin();
   cyw43_arch_init();
 }

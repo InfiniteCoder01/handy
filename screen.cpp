@@ -2,11 +2,11 @@
 #include <Adafruit_ST7735.h>
 #include <LittleFS.h>
 
-uint8_t brightness = 128;
+uint8_t brightness = 255;
 GFXcanvas16 screen(160, 128);
 U8G2_FOR_ADAFRUIT_GFX u8g2;
 
-static const uint8_t BACKLIGHT = 16;
+static const uint8_t BACKLIGHT = 15;
 static Adafruit_ST7735 tft = Adafruit_ST7735(17, 20, 21);
 
 void setupDisplay() {
