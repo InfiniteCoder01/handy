@@ -1,2 +1,3 @@
 data/secrets.h
-data/book/*
+.pio
+.vscode
