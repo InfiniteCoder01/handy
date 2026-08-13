@@ -22,15 +22,15 @@ void updateDisplay() {
   tft.setAddrWindow(0, 0, screen.width(), screen.height());
   tft.writePixels(screen.getBuffer(), screen.width() * screen.height());
   tft.endWrite();
-  analogWrite(BACKLIGHT, brightness);
+  analogWrite(BACKLIGHT, 255 - brightness);
 }
 
 void displayPower(bool enabled) {
   if (enabled) {
     tft.enableSleep(false);
-    analogWrite(BACKLIGHT, brightness);
+    analogWrite(BACKLIGHT, 255 - brightness);
   } else {
-    digitalWrite(BACKLIGHT, LOW);
+    digitalWrite(BACKLIGHT, HIGH);
     tft.enableSleep(true);
   }
 }
