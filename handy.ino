@@ -8,6 +8,7 @@ void setup() {
   Serial.begin();
   LittleFS.begin();
   initRTC();
+  initPowerManagement(); // MUST come after RTC cause powman source reconfig
   setupInput();
   setupDisplay();
   addWifiNetworks();

@@ -6,10 +6,13 @@ uint8_t brightness = 255;
 GFXcanvas16 screen(160, 128);
 U8G2_FOR_ADAFRUIT_GFX u8g2;
 
+static const uint8_t POWER = 14;
 static const uint8_t BACKLIGHT = 15;
-static Adafruit_ST7735 tft = Adafruit_ST7735(17, 20, 21);
+static Adafruit_ST7735 tft = Adafruit_ST7735(12, 20, 21);
 
 void setupDisplay() {
+  pinMode(POWER, OUTPUT);
+  digitalWrite(POWER, HIGH);
   tft.initR(INITR_BLACKTAB);
   tft.setRotation(1);
 
@@ -22,15 +25,15 @@ void updateDisplay() {
   tft.setAddrWindow(0, 0, screen.width(), screen.height());
   tft.writePixels(screen.getBuffer(), screen.width() * screen.height());
   tft.endWrite();
-  analogWrite(BACKLIGHT, 255 - brightness);
+  analogWrite(BACKLIGHT, brightness);
 }
 
 void displayPower(bool enabled) {
   if (enabled) {
     tft.enableSleep(false);
-    analogWrite(BACKLIGHT, 255 - brightness);
+    analogWrite(BACKLIGHT, brightness);
   } else {
-    digitalWrite(BACKLIGHT, HIGH);
+    digitalWrite(BACKLIGHT, LOW);
     tft.enableSleep(true);
   }
 }

@@ -23,7 +23,7 @@ extern std::map<String, String> knownWiFiNetworks;
 void updateWiFi();
 
 // Time
-extern datetime_t now;
+extern tm now;
 
 void initRTC();
 void updateRTC();
@@ -33,6 +33,7 @@ String formatTime();
 String formatDate();
 
 // Power
+void initPowerManagement();
 bool charging();
 float voltage();
 void sleep();

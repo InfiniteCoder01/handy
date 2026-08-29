@@ -36,7 +36,7 @@ static void status() {
     if (input.active() && input.a) break;
     screen.fillScreen(0);
     u8g2.setCursor(0, u8g2.getFontAscent());
-    ui::printf("Voltage: %0.2f", voltage());
+    ui::printf("Voltage: %sV", String(voltage()).c_str());
     updateDisplay();
   }
 }

@@ -1,6 +1,6 @@
 #include "hardware.hpp"
 #include "format.hpp"
-#include "hardware/rtc.h"
+#include "pico/aon_timer.h"
 
 #include <NTPClient.h>
 #include <WiFi.h>
@@ -8,10 +8,10 @@
 
 static WiFiUDP ntpUDP;
 static NTPClient ntp(ntpUDP);
-datetime_t now;
+tm now;
 
 void initRTC() {
-  rtc_init();
+  aon_timer_start_with_timeofday();
 
   ntp.begin();
   ntp.setTimeOffset(3 * 60 * 60);
@@ -20,38 +20,28 @@ void initRTC() {
 void updateRTC() {
   if (WiFi.isConnected() && ntp.update()) {
     time_t epoch = ntp.getEpochTime();
-    tm tv;
-    localtime_r(&epoch, &tv);
-    now = {
-      .year = (int16_t)(tv.tm_year + 1900),
-      .month = (int8_t)(tv.tm_mon + 1),
-      .day = (int8_t)tv.tm_mday,
-      .dotw = (int8_t)tv.tm_wday,
-      .hour = (int8_t)tv.tm_hour,
-      .min = (int8_t)tv.tm_min,
-      .sec = (int8_t)tv.tm_sec,
-    };
-    rtc_set_datetime(&now);
+    localtime_r(&epoch, &now);
+    aon_timer_set_time_calendar(&now);
     sleep_us(64);
-  } else rtc_get_datetime(&now);
+  } else aon_timer_get_time_calendar(&now);
 }
 
 String formatTime1() {
-  return format("%02u:%02u", (now.hour + 11) % 12 + 1, now.min);
+  return format("%02u:%02u", (now.tm_hour + 11) % 12 + 1, now.tm_min);
 }
 
 String formatTime2() {
-  return format("%02u %s", now.sec, now.hour >= 12 ? "PM" : "AM");
+  return format("%02u %s", now.tm_sec, now.tm_hour >= 12 ? "PM" : "AM");
 }
 
 String formatTime() {
-  return formatTime1() + (now.hour >= 12 ? "PM" : "AM");
+  return formatTime1() + (now.tm_hour >= 12 ? "PM" : "AM");
 }
 
 String formatDate() {
-  const char *dow[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+  const char *dotw[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
   const char *mon[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-  return format("%s, %s %d, %d", dow[now.dotw], mon[now.month - 1],
-                now.day, now.year);
+  return format("%s, %s %d, %d", dotw[now.tm_wday], mon[now.tm_mon],
+                now.tm_mday, now.tm_year + 1900);
 }
